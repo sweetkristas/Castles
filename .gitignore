@@ -4,25 +4,45 @@
 *.o
 *.obj
 
-# Precompiled Headers
-*.gch
-*.pch
-
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
-
-# Fortran module files
-*.mod
+#*.dll
 
 # Compiled Static libraries
 *.lai
 *.la
 *.a
-*.lib
+#*.lib
 
 # Executables
 *.exe
 *.out
 *.app
+Castles
+
+# Dependency files
+*.d
+
+# msvc files we definitely do not want
+*.sdf
+*.tlog
+*.pdb
+*.log
+*.idb
+*.ilk
+*.lastbuildstate
+*.suo
+*.user
+*.unsuccessfulbuild
+*.opensdf
+*.def
+*.exp
+vs2013/Debug
+vs2013/Release
+
+# exclude any temporary files.
+images/temp/*.png
+data/temp
+*.pb.cc
+*.pb.h
