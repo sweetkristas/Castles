@@ -448,47 +448,32 @@ std::vector<float> generate_gaussian(float sigma, int radius = 4)
 	return res;
 }
 
-class Castle : public KRE::SceneObject
+class CastleDef
 {
 public:
-	explicit Castle(const std::string& name, const variant& node) 
-		: KRE::SceneObject("Castle"),
-		  name_(name)
+	explicit CastleDef(const std::string& name, const variant& node) 
+		: name_(name)
 	{
 		using namespace KRE;
 
 		ASSERT_LOG(node.has_key("image"), "No 'image' attribute in castle definition.");
-		const std::string tex_name = node["image"].as_string();
+		const std::string tex_name = node["image"].as_string();		
+		texture_ = Texture::createTexture(tex_name, TextureType::TEXTURE_2D, 4);
+		//texture_->setFiltering(Texture::Filtering::LINEAR, Texture::Filtering::LINEAR, Texture::Filtering::POINT);
+		texture_->setAddressModes(-1, Texture::AddressMode::BORDER, Texture::AddressMode::BORDER);
 
 		ASSERT_LOG(node.has_key("concave") && node.has_key("convex"),
 			"Castle definition must have 'concave' and 'convex' attributes.");
 
 		concave_ = parse_dir(node["concave"]);
 		convex_ = parse_dir(node["convex"]);
+	}
 
-		auto tex = Texture::createTexture(tex_name, TextureType::TEXTURE_2D, 4);
-		//tex->setFiltering(Texture::Filtering::LINEAR, Texture::Filtering::LINEAR, Texture::Filtering::POINT);
-		tex->setAddressModes(-1, Texture::AddressMode::BORDER, Texture::AddressMode::BORDER);
-		setTexture(tex);
-		init();
-	}
-	void init()
-	{
-		using namespace KRE;
-		setColor(1.0f, 1.0f, 1.0f, 1.0f);
-		auto as = DisplayDevice::createAttributeSet();
-		attribs_.reset(new Attribute<vertex_texcoord>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
-		attribs_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
-		attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
-		as->addAttribute(AttributeBasePtr(attribs_));
-		as->setDrawMode(DrawMode::TRIANGLE_STRIP);
-		
-		addAttributeSet(as);
-	}
+	KRE::TexturePtr getTexture() const { return texture_; }
 private:
-	Castle() = delete;
-	const Castle& operator=(Castle const&) = delete;
-	Castle(Castle const&) = delete;
+	CastleDef() = delete;
+	const CastleDef& operator=(CastleDef const&) = delete;
+	CastleDef(CastleDef const&) = delete;
 
 	struct CastlePart {
 		rect r_;
@@ -522,18 +507,54 @@ private:
 	}
 
 	std::string name_;
-	std::shared_ptr<KRE::Attribute<KRE::vertex_texcoord>> attribs_;
+	KRE::TexturePtr texture_;
 	std::vector<CastlePart> convex_;
 	std::vector<CastlePart> concave_;
+};
+
+typedef std::shared_ptr<CastleDef> CastleDefPtr;
+
+class Castle : public KRE::SceneObject
+{
+public:
+	explicit Castle(const std::string& name, const CastleDefPtr& def) 
+		: KRE::SceneObject("Castle"),
+		  name_(name)
+	{
+		using namespace KRE;
+
+		setTexture(def->getTexture());
+		init();
+	}
+	void init()
+	{
+		using namespace KRE;
+		setColor(1.0f, 1.0f, 1.0f, 1.0f);
+		auto as = DisplayDevice::createAttributeSet();
+		attribs_.reset(new Attribute<vertex_texcoord>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
+		attribs_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
+		attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
+		as->addAttribute(AttributeBasePtr(attribs_));
+		as->setDrawMode(DrawMode::TRIANGLE_STRIP);
+		
+		addAttributeSet(as);
+	}
+private:
+	Castle() = delete;
+	const Castle& operator=(Castle const&) = delete;
+	Castle(Castle const&) = delete;
+
+	std::string name_;
+	std::shared_ptr<KRE::Attribute<KRE::vertex_texcoord>> attribs_;
 };
 
 typedef std::shared_ptr<Castle> CastlePtr;
 namespace 
 {
-	typedef std::map<std::string, CastlePtr> castle_map;
-	castle_map& get_castle_def() 
+	typedef std::map<std::string, CastleDefPtr> castle_def_map;
+	castle_def_map& get_castle_def() 
 	{
-		static castle_map res;
+		static castle_def_map res;
 		return res;
 	}
 }
@@ -543,7 +564,7 @@ void load_castle_definitions(const variant& castle_def)
 	ASSERT_LOG(castle_def.is_map(), "Castle definitions must be a map.");
 	for(const auto& def : castle_def.as_map()) {
 		const std::string name = def.first.as_string();
-		get_castle_def()[name] = std::make_shared<Castle>(name, def.second);
+		get_castle_def()[name] = std::make_shared<CastleDef>(name, def.second);
 	}
 }
 
