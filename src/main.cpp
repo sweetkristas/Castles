@@ -448,9 +448,23 @@ std::vector<float> generate_gaussian(float sigma, int radius = 4)
 	return res;
 }
 
+point hex_to_pixel(const point& p) 
+{
+	const int tile_size = 72;
+	return point((tile_size * 3 * p.x) / 2, static_cast<int>(tile_size * 1.7320508075688772935274463415059 * (p.y + p.x/2)));
+}
+
 class CastleDef
 {
 public:
+	enum Direction { BOTTOM_LEFT, BOTTOM_RIGHT, LEFT, RIGHT, TOP_LEFT, TOP_RIGHT };
+
+	struct CastlePart {
+		rect r_;
+		point offs_;
+		std::array<int, 4> border_;
+	};
+
 	explicit CastleDef(const std::string& name, const variant& node) 
 		: name_(name)
 	{
@@ -470,15 +484,12 @@ public:
 	}
 
 	KRE::TexturePtr getTexture() const { return texture_; }
+	const CastlePart& getConcaveDef(Direction dir) const { return concave_[dir]; }
+	const CastlePart& getConvexDef(Direction dir) const { return convex_[dir]; }
 private:
 	CastleDef() = delete;
 	const CastleDef& operator=(CastleDef const&) = delete;
 	CastleDef(CastleDef const&) = delete;
-
-	struct CastlePart {
-		rect r_;
-		std::array<int, 4> border_;
-	};
 
 	std::vector<CastlePart> parse_dir(const variant& node)
 	{
@@ -501,6 +512,11 @@ private:
 					cp.border_[n] = 0;
 				}
 			}
+			if(dir.has_key("offset")) {
+				cp.offs_ = point(dir["offset"]);
+			} else {
+				cp.offs_.x = cp.offs_.y = 0;
+			}
 			res.emplace_back(cp);
 		}
 		return res;
@@ -514,10 +530,16 @@ private:
 
 typedef std::shared_ptr<CastleDef> CastleDefPtr;
 
+class Castle;
+typedef std::shared_ptr<Castle> CastlePtr;
+
 class Castle : public KRE::SceneObject
 {
+	struct cons_access {
+		explicit cons_access(int) {}
+	};
 public:
-	explicit Castle(const std::string& name, const CastleDefPtr& def) 
+	explicit Castle(const cons_access&, const std::string& name, const CastleDefPtr& def, const std::set<point>& locs) 
 		: KRE::SceneObject("Castle"),
 		  name_(name)
 	{
@@ -525,7 +547,89 @@ public:
 
 		setTexture(def->getTexture());
 		init();
+
+		std::vector<KRE::vertex_texcoord> verts;
+		// Process locations, generate a list of corners that need to be placed.
+		// N, NE, SE, S, SW, NW
+		enum Directions { N, NE, SE, S, SW, NW };
+		std::vector<point> dir_list = { point(0,-1), point(1,-1), point(1,1), point(0,1), point(-1,0), point(-1,-1) };
+		for(auto& loc : locs) {
+			auto it_n = locs.find(loc + dir_list[N]);
+			auto it_nw = locs.find(loc + dir_list[NE]);
+			auto it_ne = locs.find(loc + dir_list[NW]);
+			auto it_s = locs.find(loc + dir_list[S]);
+			auto it_sw = locs.find(loc + dir_list[SE]);
+			auto it_se = locs.find(loc + dir_list[SW]);
+
+			if(it_n == locs.end() && it_ne == locs.end()) {
+				// place TR convex
+				addCorner(&verts, def->getConvexDef(CastleDef::Direction::TOP_RIGHT), loc, CastleDef::Direction::TOP_RIGHT);
+			} else {
+				if(!(it_n != locs.end() && it_ne != locs.end())) {
+					// place TR concave
+					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::TOP_RIGHT), loc, CastleDef::Direction::TOP_RIGHT);
+				}
+			}
+
+			if(it_n == locs.end() && it_nw == locs.end()) {
+				// place TL convex
+				addCorner(&verts, def->getConvexDef(CastleDef::Direction::TOP_LEFT), loc, CastleDef::Direction::TOP_LEFT);
+			} else {
+				if(!(it_n != locs.end() && it_nw != locs.end())) {
+					// place TL concave
+					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::TOP_LEFT), loc, CastleDef::Direction::TOP_LEFT);
+				}
+			}
+			
+			if(it_nw == locs.end() && it_sw == locs.end()) {
+				// place L convex
+				addCorner(&verts, def->getConvexDef(CastleDef::Direction::LEFT), loc, CastleDef::Direction::LEFT);
+			} else {
+				if(it_nw == locs.end() || it_sw == locs.end()) {
+					// place L concave
+					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::LEFT), loc, CastleDef::Direction::LEFT);
+				}
+			}
+
+			if(it_ne == locs.end() && it_se == locs.end()) {
+				// place R convex
+				addCorner(&verts, def->getConvexDef(CastleDef::Direction::RIGHT), loc, CastleDef::Direction::RIGHT);
+			} else {
+				if(!(it_ne != locs.end() && it_se != locs.end())) {
+					// place R concave
+					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::RIGHT), loc, CastleDef::Direction::RIGHT);
+				}
+			}
+
+			if(it_s == locs.end() && it_se == locs.end()) {
+				// place BR convex
+				addCorner(&verts, def->getConvexDef(CastleDef::Direction::BOTTOM_RIGHT), loc, CastleDef::Direction::BOTTOM_RIGHT);
+			} else {
+				if(!(it_s != locs.end() && it_se != locs.end())) {
+					// place BR concave
+					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::BOTTOM_RIGHT), loc, CastleDef::Direction::BOTTOM_RIGHT);
+				}
+			}
+
+			if(it_s == locs.end() && it_sw == locs.end()) {
+				// place BL convex
+				addCorner(&verts, def->getConvexDef(CastleDef::Direction::BOTTOM_LEFT), loc, CastleDef::Direction::BOTTOM_LEFT);
+			} else {
+				if(!(it_s != locs.end() && it_sw != locs.end())) {
+					// place BL concave
+					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::BOTTOM_LEFT), loc, CastleDef::Direction::BOTTOM_LEFT);
+				}
+			}
+		}
+
+		attribs_->update(&verts);
 	}
+
+	static CastlePtr create(const std::string& name, const CastleDefPtr& def, const std::set<point>& locs)
+	{
+		return std::make_shared<Castle>(cons_access{0}, name, def, locs);
+	}
+private:
 	void init()
 	{
 		using namespace KRE;
@@ -535,11 +639,33 @@ public:
 		attribs_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
 		attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
 		as->addAttribute(AttributeBasePtr(attribs_));
-		as->setDrawMode(DrawMode::TRIANGLE_STRIP);
+		as->setDrawMode(DrawMode::TRIANGLES);
 		
 		addAttributeSet(as);
 	}
-private:
+	
+	void addCorner(std::vector<KRE::vertex_texcoord>* verts, const CastleDef::CastlePart& def, const point& loc, CastleDef::Direction dir)
+	{
+		// loc is in hex co-ords, need to convert to pixel co-ords.
+		point p = hex_to_pixel(loc);
+		// offsets to the bl, br, l, r, tl, tr based on a tile size of 72.
+		std::vector<point> offset = { point(18,71), point(53, 71), point(0, 35), point(71, 35), point(18, 0), point(53, 0) };
+		const float vx1 = static_cast<float>(p.x + offset[dir].x + def.offs_.x);
+		const float vy1 = static_cast<float>(p.y + offset[dir].y + def.offs_.y);
+		const float vx2 = vx1 + def.r_.w();
+		const float vy2 = vy1 + def.r_.h();
+
+		const rectf& r = getTexture()->getTextureCoords(0, def.r_);
+
+		verts->emplace_back(glm::vec2(vx1,vy1), glm::vec2(r.x(),r.y()));
+		verts->emplace_back(glm::vec2(vx2,vy1), glm::vec2(r.x2(),r.y()));
+		verts->emplace_back(glm::vec2(vx1,vy2), glm::vec2(r.x(),r.y2()));
+
+		verts->emplace_back(glm::vec2(vx1,vy2), glm::vec2(r.x(),r.y2()));
+		verts->emplace_back(glm::vec2(vx2,vy1), glm::vec2(r.x2(),r.y()));
+		verts->emplace_back(glm::vec2(vx2,vy2), glm::vec2(r.x2(),r.y2()));
+	}
+
 	Castle() = delete;
 	const Castle& operator=(Castle const&) = delete;
 	Castle(Castle const&) = delete;
@@ -548,7 +674,6 @@ private:
 	std::shared_ptr<KRE::Attribute<KRE::vertex_texcoord>> attribs_;
 };
 
-typedef std::shared_ptr<Castle> CastlePtr;
 namespace 
 {
 	typedef std::map<std::string, CastleDefPtr> castle_def_map;
@@ -665,6 +790,15 @@ int main(int argc, char *argv[])
 	}
 
 	load_castle_definitions(castle_def);
+
+	std::set<point> castle_hexes;
+	castle_hexes.emplace(0, 0);
+	//castle_hexes.emplace(0, 1);
+	auto castle1 = Castle::create("test", get_castle_def()["human_castle"], castle_hexes);
+	castle1->setPosition(neww/2, newh/2);
+	castle1->setScale(glm::vec3(2.0f, 2.0f, 1.0f));
+	castle1->setOrder(10);
+	root->attachObject(castle1);
 
 	Uint32 last_tick_time = SDL_GetTicks();
 
