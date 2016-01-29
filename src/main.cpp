@@ -650,8 +650,8 @@ private:
 		point p = hex_to_pixel(loc);
 		// offsets to the bl, br, l, r, tl, tr based on a tile size of 72.
 		std::vector<point> offset = { point(18,71), point(53, 71), point(0, 35), point(71, 35), point(18, 0), point(53, 0) };
-		const float vx1 = static_cast<float>(p.x + offset[dir].x + def.offs_.x);
-		const float vy1 = static_cast<float>(p.y + offset[dir].y + def.offs_.y);
+		const float vx1 = static_cast<float>(p.x + offset[dir].x + def.offs_.x - def.border_[0] - (def.r_.w()/2));
+		const float vy1 = static_cast<float>(p.y + offset[dir].y + def.offs_.y - def.border_[1] - (def.r_.h()/2));
 		const float vx2 = vx1 + def.r_.w();
 		const float vy2 = vy1 + def.r_.h();
 
@@ -772,7 +772,7 @@ int main(int argc, char *argv[])
 	ShaderProgram::loadFromVariant(json::parse_from_file(shader_test_file));
 
 	std::shared_ptr<FreeTextureHolder> base_tile = std::make_shared<FreeTextureHolder>("cobbles-keep.png");
-	base_tile->setPosition(neww/2, newh/2);
+	base_tile->setPosition(neww/4, newh/4);
 	base_tile->setScale(glm::vec3(2.0f, 2.0f, 1.0f));
 	root->attachObject(base_tile);
 
@@ -792,10 +792,10 @@ int main(int argc, char *argv[])
 	load_castle_definitions(castle_def);
 
 	std::set<point> castle_hexes;
-	castle_hexes.emplace(0, 0);
+	castle_hexes.emplace(0, 1);
 	//castle_hexes.emplace(0, 1);
 	auto castle1 = Castle::create("test", get_castle_def()["human_castle"], castle_hexes);
-	castle1->setPosition(neww/2, newh/2);
+	castle1->setPosition(neww/4, newh/4);
 	castle1->setScale(glm::vec3(2.0f, 2.0f, 1.0f));
 	castle1->setOrder(10);
 	root->attachObject(castle1);
