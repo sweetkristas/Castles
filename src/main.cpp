@@ -792,8 +792,8 @@ int main(int argc, char *argv[])
 	load_castle_definitions(castle_def);
 
 	std::set<point> castle_hexes;
+	castle_hexes.emplace(0, 0);
 	castle_hexes.emplace(0, 1);
-	//castle_hexes.emplace(0, 1);
 	auto castle1 = Castle::create("test", get_castle_def()["human_castle"], castle_hexes);
 	castle1->setPosition(neww/4, newh/4);
 	castle1->setScale(glm::vec3(2.0f, 2.0f, 1.0f));
