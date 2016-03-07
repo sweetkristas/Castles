@@ -82,7 +82,7 @@ LDFLAGS += -fsanitize=address
 endif
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := -isystem external/include $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2)
+INC := -isystem external/include $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib cairo freetype2)
 
 ifdef STEAM_RUNTIME_ROOT
 	INC += -isystem $(STEAM_RUNTIME_ROOT)/include
@@ -90,7 +90,7 @@ endif
 
 # Linker library options.
 LIBS := $(shell pkg-config --libs x11 gl ) \
-	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib freetype2) \
+	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib cairo freetype2) \
 	-lSDL2_ttf -lSDL2_mixer -lrt
 
 MODULES   := kre

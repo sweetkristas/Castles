@@ -371,7 +371,7 @@ bool variant::operator==(const variant& n) const
 {
 	if(type() != n.type()) {
 		if(type() == VARIANT_TYPE_FLOAT || n.type() == VARIANT_TYPE_FLOAT) {
-			if(!is_numeric() && !is_null() || !n.is_numeric() && !n.is_null()) {
+			if((!is_numeric() && !is_null()) || (!n.is_numeric() && !n.is_null())) {
 				return false;
 			}
 			return is_numeric() == n.is_numeric();

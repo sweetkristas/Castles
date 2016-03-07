@@ -127,8 +127,8 @@ namespace base64
 		\param out Pointer to place the 3 plaintext characters.
 	*/
 	static void decodeblock(const char* in, std::vector<char>::iterator& out) {
-		unsigned long nn = (_base64inv[in[0]] << 18) | (_base64inv[in[1]] << 12) 
-			| (_base64inv[in[2]] << 6) | (_base64inv[in[3]]);
+		unsigned long nn = (_base64inv[static_cast<int>(in[0])] << 18) | (_base64inv[static_cast<int>(in[1])] << 12) 
+			| (_base64inv[static_cast<int>(in[2])] << 6) | (_base64inv[static_cast<int>(in[3])]);
 		*out++ = (char)(nn >> 16);
 		*out++ = (char)(nn >> 8);
 		*out++ = (char)nn;
