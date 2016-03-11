@@ -561,65 +561,65 @@ public:
 			auto it_sw = locs.find(loc + dir_list[SE]);
 			auto it_se = locs.find(loc + dir_list[SW]);
 
-			if(it_n == locs.end() && it_ne == locs.end()) {
+			//if(it_n == locs.end() && it_ne == locs.end()) {
 				// place TR convex
 				addCorner(&verts, def->getConvexDef(CastleDef::Direction::TOP_RIGHT), loc, CastleDef::Direction::TOP_RIGHT);
-			} else {
-				if(!(it_n != locs.end() && it_ne != locs.end())) {
-					// place TR concave
-					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::TOP_RIGHT), loc, CastleDef::Direction::TOP_RIGHT);
-				}
-			}
+			//} else {
+			//	if(!(it_n != locs.end() && it_ne != locs.end())) {
+			//		// place TR concave
+			//		addCorner(&verts, def->getConcaveDef(CastleDef::Direction::TOP_RIGHT), loc, CastleDef::Direction::TOP_RIGHT);
+			//	}
+			//}
 
-			if(it_n == locs.end() && it_nw == locs.end()) {
+			//if(it_n == locs.end() && it_nw == locs.end()) {
 				// place TL convex
 				addCorner(&verts, def->getConvexDef(CastleDef::Direction::TOP_LEFT), loc, CastleDef::Direction::TOP_LEFT);
-			} else {
-				if(!(it_n != locs.end() && it_nw != locs.end())) {
-					// place TL concave
-					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::TOP_LEFT), loc, CastleDef::Direction::TOP_LEFT);
-				}
-			}
+			//} else {
+			//	if(!(it_n != locs.end() && it_nw != locs.end())) {
+			//		// place TL concave
+			//		addCorner(&verts, def->getConcaveDef(CastleDef::Direction::TOP_LEFT), loc, CastleDef::Direction::TOP_LEFT);
+			//	}
+			//}
 			
-			if(it_nw == locs.end() && it_sw == locs.end()) {
+			//if(it_nw == locs.end() && it_sw == locs.end()) {
 				// place L convex
 				addCorner(&verts, def->getConvexDef(CastleDef::Direction::LEFT), loc, CastleDef::Direction::LEFT);
-			} else {
-				if(it_nw == locs.end() || it_sw == locs.end()) {
-					// place L concave
-					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::LEFT), loc, CastleDef::Direction::LEFT);
-				}
-			}
+			//} else {
+			//	if(it_nw == locs.end() || it_sw == locs.end()) {
+			//		// place L concave
+			//		addCorner(&verts, def->getConcaveDef(CastleDef::Direction::LEFT), loc, CastleDef::Direction::LEFT);
+			//	}
+			//}
 
-			if(it_ne == locs.end() && it_se == locs.end()) {
+			//if(it_ne == locs.end() && it_se == locs.end()) {
 				// place R convex
 				addCorner(&verts, def->getConvexDef(CastleDef::Direction::RIGHT), loc, CastleDef::Direction::RIGHT);
-			} else {
-				if(!(it_ne != locs.end() && it_se != locs.end())) {
-					// place R concave
-					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::RIGHT), loc, CastleDef::Direction::RIGHT);
-				}
-			}
+			//} else {
+			//	if(!(it_ne != locs.end() && it_se != locs.end())) {
+			//		// place R concave
+			//		addCorner(&verts, def->getConcaveDef(CastleDef::Direction::RIGHT), loc, CastleDef::Direction::RIGHT);
+			//	}
+			//}
 
-			if(it_s == locs.end() && it_se == locs.end()) {
+			//if(it_s == locs.end() && it_se == locs.end()) {
 				// place BR convex
 				addCorner(&verts, def->getConvexDef(CastleDef::Direction::BOTTOM_RIGHT), loc, CastleDef::Direction::BOTTOM_RIGHT);
-			} else {
-				if(!(it_s != locs.end() && it_se != locs.end())) {
-					// place BR concave
-					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::BOTTOM_RIGHT), loc, CastleDef::Direction::BOTTOM_RIGHT);
-				}
-			}
+			//} else {
+			//	if(!(it_s != locs.end() && it_se != locs.end())) {
+			//		// place BR concave
+			//		addCorner(&verts, def->getConcaveDef(CastleDef::Direction::BOTTOM_RIGHT), loc, CastleDef::Direction::BOTTOM_RIGHT);
+			//	}
+			//}
 
-			if(it_s == locs.end() && it_sw == locs.end()) {
+			//if(it_s == locs.end() && it_sw == locs.end()) {
 				// place BL convex
 				addCorner(&verts, def->getConvexDef(CastleDef::Direction::BOTTOM_LEFT), loc, CastleDef::Direction::BOTTOM_LEFT);
-			} else {
-				if(!(it_s != locs.end() && it_sw != locs.end())) {
-					// place BL concave
-					addCorner(&verts, def->getConcaveDef(CastleDef::Direction::BOTTOM_LEFT), loc, CastleDef::Direction::BOTTOM_LEFT);
-				}
-			}
+			//} else {
+			//	if(!(it_s != locs.end() && it_sw != locs.end())) {
+			//		// place BL concave
+			//		addCorner(&verts, def->getConcaveDef(CastleDef::Direction::BOTTOM_LEFT), loc, CastleDef::Direction::BOTTOM_LEFT);
+			//	}
+			//}
 		}
 
 		attribs_->update(&verts);
