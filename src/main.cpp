@@ -451,7 +451,7 @@ std::vector<float> generate_gaussian(float sigma, int radius = 4)
 point hex_to_pixel(const point& p) 
 {
 	const int tile_size = 72;
-	return point((tile_size * 3 * p.x) / 2, static_cast<int>(tile_size * 1.7320508075688772935274463415059 * (p.y + p.x/2)));
+	return point(tile_size * p.x, tile_size * p.y + (p.x % 2) * tile_size/2);
 }
 
 class CastleDef
